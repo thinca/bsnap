@@ -1,0 +1,208 @@
+#!/bin/bash
+
+set -ue
+
+shopt -s nullglob
+
+ensure-group() {
+	if [[ -z "${group}" ]]; then
+		echo "{group} does not exist" >&2
+		exit 1
+	fi
+}
+
+ensure-target() {
+	if [[ ! -d "${target}" ]]; then
+		echo "{target} does not exist" >&2
+		exit 1
+	fi
+}
+
+ensure-snapshots_dir() {
+	if [[ ! -d "${snapshots_dir}" ]]; then
+		echo "{snapshots_dir} does not exist" >&2
+		exit 1
+	fi
+}
+
+ensure-leave_count() {
+	if [[ -z "${leave_count}" ]]; then
+		echo "{leave_count} does not exist" >&2
+		exit 1
+	fi
+}
+
+cmd-help() {
+	cat <<-HELP
+	Usage: $(basename $0) [options] {subcmd}
+
+	Sub commands:
+	  list                List snapshots
+	  create [comment]    Create a new snapshot
+	  delete [name]       Delete a snapshot
+	  cleanup             Delete old snapshots
+	  show-config         Show supplied config
+	  help                Show this help
+	  version             Show program version
+
+	Options:
+	  -c {config}         Load config from a file placed config dir
+	  -g {group}          Specify {group}
+	  -s {snapshots_dir}  Specify {snapshots_dir}
+	  -t {target}         Specify {target}
+	  -l {leave_count}    Specify {leave_count}
+	  -a                  Enable {auto_cleanup}
+	HELP
+	exit
+}
+
+cmd-version() {
+	echo "bsnap v0.0.1"
+	exit
+}
+
+cmd-list() {
+	ensure-snapshots_dir
+
+	local dirs snapshot
+	dirs=$(ls -1 "${snapshots_dir}")
+	if [[ -n "${group}" ]]; then
+		dirs=$(echo "${dirs}" | grep -- "-${group}"'\($\|\.\)' || :)
+	fi
+	[[ -z "${dirs}" ]] || echo "${dirs}" | while read snapshot; do
+		echo ${snapshot#snapshot-}
+	done
+}
+
+cmd-create() {
+	ensure-group
+	ensure-target
+	ensure-snapshots_dir
+
+	local name=${1:-} suffix= snapshot_dir
+	if [[ -n "${name}" ]]; then
+		if [[ "${name}" == */* ]]; then
+			echo "{name} must not contain /" >&2
+			exit 1
+		fi
+		suffix=".${name}"
+	fi
+
+	snapshot_dir="${snapshots_dir}/snapshot-$(date '+%FT%T')-${group}${suffix}"
+	if [[ -e "${snapshot_dir}" ]]; then
+		echo "snapshot already exists: ${snapshot_dir}" >&2
+		exit 1
+	fi
+	btrfs subvolume snapshot -r "${target}" "${snapshot_dir}"
+	if [[ "${auto_cleanup}" == "yes" ]]; then
+		cmd-cleanup
+	fi
+}
+
+cmd-delete() {
+	ensure-snapshots_dir
+
+	local name=${1:-}
+	if [[ -z "${name}" ]]; then
+		local input snapshots
+		IFS=$'\n' snapshots=($(cmd-list))
+		PS3="Which one to delete? (C-d to cancel) > "
+		select input in "${snapshots[@]}"; do
+			if [[ -n "${input}" ]]; then
+				name="${input}"
+				break
+			fi
+		done
+		if [[ -z "${name}" ]]; then
+			echo "Canceled." >&2
+			return
+		fi
+	fi
+
+	local snapshot_dir="${snapshots_dir}/snapshot-${name}"
+	if [[ ! -d "${snapshot_dir}" ]]; then
+		echo "snapshot_dir does not exist" >&2
+		return 1
+	fi
+
+	btrfs property set "${snapshot_dir}" ro false
+	btrfs subvolume delete "${snapshot_dir}"
+}
+
+cmd-cleanup() {
+	ensure-leave_count
+
+	cmd-list | head -n "-${leave_count}" | while read snapshot; do
+		cmd-delete "${snapshot}"
+	done
+}
+
+cmd-show-config() {
+	cat <<-CONFIG
+	group="${group}"
+	snapshots_dir="${snapshots_dir}"
+	target="${target}"
+	leave_count="${leave_count}"
+	auto_cleanup="${auto_cleanup}"
+	CONFIG
+}
+
+load-config-file() {
+	local filename=$1 dir
+	if [[ "${filename}" == */* ]]; then
+		if [[ -r "${filename}" ]]; then
+			source "${filename}"
+			return
+		fi
+	else
+		local dirs=()
+		if [[ -n "${HOME:-}" ]]; then
+			dirs+=("$HOME/.config/bsnap")
+		fi
+		dirs+=(/etc/bsnap)
+		for dir in "${dirs[@]}"; do
+			if [[ -r "${dir}/${filename}" ]]; then
+				source "${dir}/${filename}"
+				return
+			fi
+		done
+	fi
+	echo "Config file ${filename} does not found" >&2
+	exit 1
+}
+
+load-args() {
+	while getopts c:g:s:t:l:a OPT; do
+		case "${OPT}" in
+			c) load-config-file "${OPTARG}" ;;
+			g) group=${OPTARG} ;;
+			s) snapshots_dir=${OPTARG} ;;
+			t) target=${OPTARG} ;;
+			l) leave_count=${OPTARG} ;;
+			a) auto_cleanup=yes ;;
+			\?) cmd-help ;;
+		esac
+	done
+}
+
+group=
+snapshots_dir=
+target=
+leave_count=
+auto_cleanup=
+
+load-args "$@"
+shift $((OPTIND - 1))
+OPTIND=0
+
+[[ $# -ne 0 ]] || cmd-help
+
+subcmd=${1:-help}
+shift
+
+if [[ $(type -t "cmd-${subcmd}") == "function" ]]; then
+	"cmd-${subcmd}" "$@"
+else
+	echo "Unknown sub command: ${subcmd}" >&2
+	exit 1
+fi
