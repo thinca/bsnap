@@ -193,10 +193,8 @@ load-args "$@"
 shift $((OPTIND - 1))
 OPTIND=0
 
-[[ $# -ne 0 ]] || cmd-help
-
 subcmd=${1:-help}
-shift
+${1+shift}
 
 if [[ $(type -t "cmd-${subcmd}") == "function" ]]; then
 	"cmd-${subcmd}" "$@"
