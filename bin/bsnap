@@ -4,31 +4,32 @@ set -ue
 
 shopt -s nullglob
 
+error() {
+	echo "${1}" >&2
+	exit 1
+}
+
 ensure-group() {
 	if [[ -z "${group}" ]]; then
-		echo "{group} does not exist" >&2
-		exit 1
+		error "{group} does not exist"
 	fi
 }
 
 ensure-target() {
 	if [[ ! -d "${target}" ]]; then
-		echo "{target} does not exist" >&2
-		exit 1
+		error "{target} does not exist"
 	fi
 }
 
 ensure-snapshots_dir() {
 	if [[ ! -d "${snapshots_dir}" ]]; then
-		echo "{snapshots_dir} does not exist" >&2
-		exit 1
+		error "{snapshots_dir} does not exist"
 	fi
 }
 
 ensure-leave_count() {
 	if [[ -z "${leave_count}" ]]; then
-		echo "{leave_count} does not exist" >&2
-		exit 1
+		error "{leave_count} does not exist"
 	fi
 }
 
@@ -82,16 +83,14 @@ cmd-create() {
 	local name=${1:-} suffix= snapshot_dir
 	if [[ -n "${name}" ]]; then
 		if [[ "${name}" == */* ]]; then
-			echo "{name} must not contain /" >&2
-			exit 1
+			error "{name} must not contain /"
 		fi
 		suffix=".${name}"
 	fi
 
 	snapshot_dir="${snapshots_dir}/snapshot-$(date '+%FT%T')-${group}${suffix}"
 	if [[ -e "${snapshot_dir}" ]]; then
-		echo "snapshot already exists: ${snapshot_dir}" >&2
-		exit 1
+		error "snapshot already exists: ${snapshot_dir}"
 	fi
 	btrfs subvolume snapshot -r "${target}" "${snapshot_dir}"
 	if [[ "${auto_cleanup}" == "yes" ]]; then
@@ -167,8 +166,7 @@ load-config-file() {
 			fi
 		done
 	fi
-	echo "Config file ${filename} does not found" >&2
-	exit 1
+	error "Config file ${filename} does not found"
 }
 
 load-args() {
@@ -203,6 +201,5 @@ shift
 if [[ $(type -t "cmd-${subcmd}") == "function" ]]; then
 	"cmd-${subcmd}" "$@"
 else
-	echo "Unknown sub command: ${subcmd}" >&2
-	exit 1
+	error "Unknown sub command: ${subcmd}"
 fi
