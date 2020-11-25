@@ -24,10 +24,10 @@ Less dependency.  You need `btrfs` command only, maybe.
 
 ```shell
 $ bsnap -n daily -t / -s /.snapshots create
-Create a readonly snapshot of '/' in '/.snapshots/snapshot-2020-10-10_16-05-36-daily'
+Create a readonly snapshot of '/' in '/.snapshots/snapshot-2020-10-10T16:05:36-daily'
 ```
 
-This command will create a snapshot of `/` to the place like `/.snapshpts/snapshot-2020-10-09_18-19-20-daily`.
+This command will create a snapshot of `/` to the place like `/.snapshpts/snapshot-2020-10-09T18:19:20-daily`.
 The number part is datetime a snapshot created.
 
 
@@ -42,7 +42,7 @@ You can add minimum comment string to a snapshot.
 
 ```shell
 $ bsnap -c root-daily create some-comment
-Create a readonly snapshot of '/' in '/.snapshots/snapshot-2020-10-10_16-05-36-daily.some-comment'
+Create a readonly snapshot of '/' in '/.snapshots/snapshot-2020-10-10T16:05:36-daily.some-comment'
 ```
 
 
@@ -52,11 +52,11 @@ Create a readonly snapshot of '/' in '/.snapshots/snapshot-2020-10-10_16-05-36-d
 
 ```shell
 $ bsnap -c root-daily list
-2020-10-08_04-00-00-daily
-2020-10-09_04-00-00-daily
-2020-10-10_04-00-00-daily
-2020-10-11_04-00-00-daily
-2020-10-12_04-00-00-daily
+2020-10-08T04:00:00-daily
+2020-10-09T04:00:00-daily
+2020-10-10T04:00:00-daily
+2020-10-11T04:00:00-daily
+2020-10-12T04:00:00-daily
 ```
 
 
@@ -66,31 +66,31 @@ $ bsnap -c root-daily list
 
 ```shell
 $ bsnap -c root-daily delete
-1) 2020-10-08_04-00-00-daily
-2) 2020-10-09_04-00-00-daily
-3) 2020-10-10_04-00-00-daily
-4) 2020-10-11_04-00-00-daily
-5) 2020-10-12_04-00-00-daily
+1) 2020-10-08T04:00:00-daily
+2) 2020-10-09T04:00:00-daily
+3) 2020-10-10T04:00:00-daily
+4) 2020-10-11T04:00:00-daily
+5) 2020-10-12T04:00:00-daily
 Which one to delete? (C-d to cancel) > 3
-Delete subvolume (no-commit): '/.snapshots/snapshot-2020-10-10_04-00-00-daily'
+Delete subvolume (no-commit): '/.snapshots/snapshot-2020-10-10T04:00:00-daily'
 
 $ bsnap -c root-daily list
-2020-10-08_04-00-00-daily
-2020-10-09_04-00-00-daily
-2020-10-11_04-00-00-daily
-2020-10-12_04-00-00-daily
+2020-10-08T04:00:00-daily
+2020-10-09T04:00:00-daily
+2020-10-11T04:00:00-daily
+2020-10-12T04:00:00-daily
 ```
 
 You can pass a snapshot name directly as an argument.
 
 ```shell
-$ bsnap -c root-daily delete 2020-10-09_04-00-00-daily
-Delete subvolume (no-commit): '/.snapshots/snapshot-2020-10-09_04-00-00-daily'
+$ bsnap -c root-daily delete 2020-10-09T04:00:00-daily
+Delete subvolume (no-commit): '/.snapshots/snapshot-2020-10-09T04:00:00-daily'
 
 $ bsnap -c root-daily list
-2020-10-08_04-00-00-daily
-2020-10-11_04-00-00-daily
-2020-10-12_04-00-00-daily
+2020-10-08T04:00:00-daily
+2020-10-11T04:00:00-daily
+2020-10-12T04:00:00-daily
 ```
 
 ### Cleanup snapshots
@@ -99,20 +99,20 @@ $ bsnap -c root-daily list
 
 ```shell
 $ bsnap -c root-daily list
-2020-10-08_04-00-00-daily
-2020-10-09_04-00-00-daily
-2020-10-10_04-00-00-daily
-2020-10-11_04-00-00-daily
-2020-10-12_04-00-00-daily
+2020-10-08T04:00:00-daily
+2020-10-09T04:00:00-daily
+2020-10-10T04:00:00-daily
+2020-10-11T04:00:00-daily
+2020-10-12T04:00:00-daily
 
 $ bsnap -c root-dialy -l 3 cleanup
-Delete subvolume (no-commit): '/.snapshots/snapshot-2020-10-08_04-00-00-daily'
-Delete subvolume (no-commit): '/.snapshots/snapshot-2020-10-09_04-00-00-daily'
+Delete subvolume (no-commit): '/.snapshots/snapshot-2020-10-08T04:00:00-daily'
+Delete subvolume (no-commit): '/.snapshots/snapshot-2020-10-09T04:00:00-daily'
 
 $ bsnap -c root-daily list
-2020-10-10_04-00-00-daily
-2020-10-11_04-00-00-daily
-2020-10-12_04-00-00-daily
+2020-10-10T04:00:00-daily
+2020-10-11T04:00:00-daily
+2020-10-12T04:00:00-daily
 ```
 
 
