@@ -42,6 +42,7 @@ cmd-help() {
 	  create [comment]    Create a new snapshot
 	  delete [name]       Delete a snapshot
 	  cleanup             Delete old snapshots
+	  rm-path             Remove path from all snapshots
 	  show-config         Show supplied config
 	  help                Show this help
 	  version             Show program version
@@ -133,6 +134,23 @@ cmd-cleanup() {
 
 	cmd-list | head -n "-${leave_count}" | while read snapshot; do
 		cmd-delete "${snapshot}"
+	done
+}
+
+cmd-rm-path() {
+	local path=${1:-}
+	if [[ -z "${path}" ]]; then
+		error "{path} argument required."
+	fi
+	local snapshot_dir target_path name
+	cmd-list | while read name; do
+		snapshot_dir="${snapshots_dir}/snapshot-${name}"
+		target_path="${snapshot_dir}/${path}"
+		if [[ -e "${target_path}" ]]; then
+			btrfs property set "${snapshot_dir}" ro false
+			rm -fr "${target_path}"
+			btrfs property set "${snapshot_dir}" ro true
+		fi
 	done
 }
 
