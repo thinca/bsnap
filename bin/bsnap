@@ -11,25 +11,25 @@ error() {
 
 ensure-group() {
 	if [[ -z "${group}" ]]; then
-		error "{group} does not exist"
+		error '{group} does not exist'
 	fi
 }
 
 ensure-target() {
 	if [[ ! -d "${target}" ]]; then
-		error "{target} does not exist"
+		error '{target} does not exist'
 	fi
 }
 
 ensure-snapshots_dir() {
 	if [[ ! -d "${snapshots_dir}" ]]; then
-		error "{snapshots_dir} does not exist"
+		error '{snapshots_dir} does not exist'
 	fi
 }
 
 ensure-leave_count() {
 	if [[ -z "${leave_count}" ]]; then
-		error "{leave_count} does not exist"
+		error '{leave_count} does not exist'
 	fi
 }
 
@@ -59,7 +59,7 @@ cmd-help() {
 }
 
 cmd-version() {
-	echo "bsnap v0.0.1"
+	echo 'bsnap v0.0.1'
 	exit
 }
 
@@ -84,7 +84,7 @@ cmd-create() {
 	local name=${1:-} suffix= snapshot_dir
 	if [[ -n "${name}" ]]; then
 		if [[ "${name}" == */* ]]; then
-			error "{name} must not contain /"
+			error '{name} must not contain /'
 		fi
 		suffix=".${name}"
 	fi
@@ -94,7 +94,7 @@ cmd-create() {
 		error "snapshot already exists: ${snapshot_dir}"
 	fi
 	btrfs subvolume snapshot -r "${target}" "${snapshot_dir}"
-	if [[ "${auto_cleanup}" == "yes" ]]; then
+	if [[ "${auto_cleanup}" == 'yes' ]]; then
 		cmd-cleanup
 	fi
 }
@@ -106,7 +106,7 @@ cmd-delete() {
 	if [[ -z "${name}" ]]; then
 		local input snapshots
 		readarray -t snapshots <<<$(cmd-list)
-		local PS3="Which one to delete? (C-d to cancel) > "
+		local PS3='Which one to delete? (C-d to cancel) > '
 		select input in "${snapshots[@]}"; do
 			if [[ -n "${input}" ]]; then
 				name="${input}"
@@ -114,14 +114,14 @@ cmd-delete() {
 			fi
 		done
 		if [[ -z "${name}" ]]; then
-			echo "Canceled." >&2
+			echo 'Canceled.' >&2
 			return
 		fi
 	fi
 
 	local snapshot_dir="${snapshots_dir}/snapshot-${name}"
 	if [[ ! -d "${snapshot_dir}" ]]; then
-		echo "snapshot_dir does not exist" >&2
+		echo 'snapshot_dir does not exist' >&2
 		return 1
 	fi
 
@@ -140,7 +140,7 @@ cmd-cleanup() {
 cmd-rm-path() {
 	local path=${1:-}
 	if [[ -z "${path}" ]]; then
-		error "{path} argument required."
+		error '{path} argument required.'
 	fi
 	local snapshot_dir target_path name
 	cmd-list | while read name; do
@@ -214,7 +214,7 @@ OPTIND=0
 subcmd=${1:-help}
 ${1+shift}
 
-if [[ $(type -t "cmd-${subcmd}") == "function" ]]; then
+if [[ $(type -t "cmd-${subcmd}") == 'function' ]]; then
 	"cmd-${subcmd}" "$@"
 else
 	error "Unknown sub command: ${subcmd}"
