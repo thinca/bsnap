@@ -106,7 +106,7 @@ cmd-delete() {
 	if [[ -z "${name}" ]]; then
 		local input snapshots
 		readarray -t snapshots <<<$(cmd-list)
-		PS3="Which one to delete? (C-d to cancel) > "
+		local PS3="Which one to delete? (C-d to cancel) > "
 		select input in "${snapshots[@]}"; do
 			if [[ -n "${input}" ]]; then
 				name="${input}"
