@@ -59,7 +59,7 @@ cmd-help() {
 }
 
 cmd-version() {
-	echo 'bsnap v0.0.1'
+	echo 'bsnap v0.0.2'
 	exit
 }
 
