@@ -71,8 +71,8 @@ cmd-list() {
 	if [[ -n "${group}" ]]; then
 		dirs=$(echo "${dirs}" | grep -- "-${group}"'\($\|\.\)' || :)
 	fi
-	[[ -z "${dirs}" ]] || echo "${dirs}" | while read snapshot; do
-		echo ${snapshot#snapshot-}
+	[[ -z "${dirs}" ]] || echo "${dirs}" | while IFS= read -r snapshot; do
+		echo "${snapshot#snapshot-}"
 	done
 }
 
@@ -132,7 +132,7 @@ cmd-delete() {
 cmd-cleanup() {
 	ensure-leave_count
 
-	cmd-list | head -n "-${leave_count}" | while read snapshot; do
+	cmd-list | head -n "-${leave_count}" | while IFS= read -r snapshot; do
 		cmd-delete "${snapshot}"
 	done
 }
@@ -143,7 +143,7 @@ cmd-rm-path() {
 		error '{path} argument required.'
 	fi
 	local snapshot_dir target_path name
-	cmd-list | while read name; do
+	cmd-list | while IFS= read -r name; do
 		snapshot_dir="${snapshots_dir}/snapshot-${name}"
 		target_path="${snapshot_dir}/${path}"
 		if [[ -e "${target_path}" ]]; then
